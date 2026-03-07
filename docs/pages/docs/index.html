@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SakuruBoot Documentation</title>
+
+    <meta name="description" content="SakuruBoot documentation — getting started, configuration reference, LUKS encryption, and build instructions.">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#b400b4">
+
+    <!-- docs-root tells docs.js where to fetch .md files from -->
+    <meta name="docs-root" content="../../">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SakuruBoot Docs">
+    <meta property="og:description" content="SakuruBoot documentation.">
+    <meta property="og:image" content="../../assets/logo.svg">
+
+    <link rel="icon" type="image/svg+xml" href="../../assets/logo.svg">
+    <link rel="apple-touch-icon" href="../../assets/logo.svg">
+
+    <link rel="stylesheet" href="../../styles/elements.css">
+    <link rel="stylesheet" href="../../styles/classes.css">
+    <script src="../../scripts/global-loader.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-ini.min.js"></script>
+</head>
+
+<body class="geist">
+    <div class="unselect">
+        <nav class="navbar navbar-logo-bar">
+            <a class="logo-link" href="../../index.html">
+                <img src="../../assets/logo.svg" width="36" height="36" alt="SakuruBoot">
+                <span class="geist" style="font-size:15px;font-weight:600;color:rgb(200,200,200)">SakuruBoot</span>
+            </a>
+            <a class="geist" href="https://github.com/PinkQween/SakuruBoot" target="_blank">Source</a>
+            <a class="geist" href="https://github.com/PinkQween/SakuruBoot/releases" target="_blank">Releases</a>
+        </nav>
+    </div>
+
+    <div class="docs-layout">
+        <aside class="docs-sidebar unselect">
+            <nav class="docs-nav">
+                <div class="docs-nav-group">
+                    <p class="docs-nav-title">Getting started</p>
+                    <a class="docs-nav-link" data-doc="getting-started" href="#getting-started">Introduction</a>
+                    <a class="docs-nav-link" data-doc="building"        href="#building">Building</a>
+                </div>
+                <div class="docs-nav-group">
+                    <p class="docs-nav-title">Configuration</p>
+                    <a class="docs-nav-link" data-doc="config"  href="#config">sakuru.cfg</a>
+                    <a class="docs-nav-link" data-doc="cmdline" href="#cmdline">Kernel cmdline</a>
+                </div>
+                <div class="docs-nav-group">
+                    <p class="docs-nav-title">Encryption</p>
+                    <a class="docs-nav-link" data-doc="luks"   href="#luks">LUKS overview</a>
+                    <a class="docs-nav-link" data-doc="crypto" href="#crypto">Crypto internals</a>
+                </div>
+                <div class="docs-nav-group">
+                    <p class="docs-nav-title">Internals</p>
+                    <a class="docs-nav-link" data-doc="uefi" href="#uefi">UEFI loader</a>
+                    <a class="docs-nav-link" data-doc="bios" href="#bios">BIOS loader</a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="docs-main">
+            <div id="docs-content" class="markdown-body geist"></div>
+        </main>
+    </div>
+
+    <script src="../../scripts/vendor-loader.js"></script>
+    <script src="../../scripts/copy.js"></script>
+    <script src="../../scripts/docs.js"></script>
+</body>
+</html>

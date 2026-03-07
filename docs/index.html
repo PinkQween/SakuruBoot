@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SakuruBoot — Lightweight UEFI &amp; BIOS Bootloader</title>
+
+    <meta name="description" content="SakuruBoot is a lightweight UEFI &amp; BIOS bootloader with config-driven OS selection, LUKS encryption support, and dual x86_64 / AArch64 targets.">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#b400b4">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pinkqween.github.io/SakuruBoot/">
+    <meta property="og:title" content="SakuruBoot">
+    <meta property="og:description" content="Lightweight UEFI &amp; BIOS bootloader with LUKS encryption and config-driven OS selection.">
+    <meta property="og:image" content="./assets/logo.svg">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="SakuruBoot">
+    <meta name="twitter:description" content="Lightweight UEFI &amp; BIOS bootloader — x86_64 &amp; AArch64.">
+
+    <link rel="icon" type="image/svg+xml" href="./assets/logo.svg">
+    <link rel="apple-touch-icon" href="./assets/logo.svg">
+
+    <link rel="stylesheet" href="./styles/elements.css">
+    <link rel="stylesheet" href="./styles/classes.css">
+    <script src="./scripts/global-loader.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</head>
+
+<body class="geist">
+    <div class="unselect">
+        <nav class="navbar">
+            <a class="geist" href="./pages/docs/index.html">Documentation</a>
+            <a class="geist" href="https://github.com/PinkQween/SakuruBoot" target="_blank">Source</a>
+            <a class="geist" href="https://github.com/PinkQween/SakuruBoot/releases" target="_blank">Releases</a>
+        </nav>
+    </div>
+
+    <div class="hero unselect">
+        <div class="hero-logo-wrapper">
+            <img src="./assets/logo.svg" alt="SakuruBoot Shield Logo" class="hero-logo-svg">
+        </div>
+        <div class="hero-text">
+            <h1 class="geist">SakuruBoot<span class="hero-sub"> /sɑːkʊɹuːbuːt/</span></h1>
+            <p class="geist subtitle">
+                A lightweight UEFI &amp; BIOS bootloader with config-driven<br>
+                OS selection, LUKS1/2 encryption, and dual x86_64 / AArch64 support.
+            </p>
+            <div class="hero-actions">
+                <a class="btn-primary geist" href="./pages/docs/index.html">Read the docs</a>
+                <a class="btn-secondary geist" href="https://github.com/PinkQween/SakuruBoot" target="_blank">View on GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature cards -->
+    <section class="features unselect">
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🔐</span>
+                <h3>LUKS Encryption</h3>
+                <p>Full LUKS1 and LUKS2 unlock directly in the bootloader. Supports PBKDF2, Argon2id, XTS-AES, CBC-ESSIV, and masked passphrase entry.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <h3>UEFI &amp; BIOS</h3>
+                <p>Native UEFI PE32+ binary for modern firmware. Legacy MBR BIOS stage 1 / stage 2 for older hardware. Single codebase.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🏗️</span>
+                <h3>Dual Architecture</h3>
+                <p>Builds to x86_64-w64-mingw32 PE and AArch64 flat ELF. Extend to new targets with a few Makefile lines.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📄</span>
+                <h3>Config-Driven</h3>
+                <p>Human-readable <code>sakuru.cfg</code> for OS entries, default selection, timeouts, kernel args, and initrd paths.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🪶</span>
+                <h3>Freestanding C11</h3>
+                <p>Zero stdlib dependencies — <code>-ffreestanding -nostdlib</code>. Every helper is hand-rolled. Fits comfortably in the EFI partition.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🔓</span>
+                <h3>Open Source</h3>
+                <p>MIT licensed. Hack it, fork it, ship it. Contributions welcome — from crypto backends to new filesystem drivers.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Config sample -->
+    <section class="code-sample">
+        <div class="code-inner">
+            <div class="code-left unselect">
+                <h2 class="geist">Configuration</h2>
+                <p class="geist code-desc">
+                    Drop a <code>sakuru.cfg</code> at the root of your EFI partition.
+                    Entries map human-readable names to kernels, initrds, and cmdlines.
+                    Encryption is a one-liner.
+                </p>
+            </div>
+            <div class="code-right">
+                <pre><code class="language-ini">; sakuru.cfg — example configuration
+
+default = Arch Linux
+timeout = 5
+
+entry {
+    title   = Arch Linux
+    kernel  = /vmlinuz-linux
+    initrd  = /initramfs-linux.img
+    cmdline = root=/dev/sda2 rw quiet
+}
+
+entry {
+    title      = Arch Linux (encrypted)
+    kernel     = /vmlinuz-linux
+    initrd     = /initramfs-linux.img
+    cmdline    = root=/dev/mapper/root rw quiet
+    encrypted  = yes
+    luks_tries = 3
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <script src="./scripts/copy.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.attachCopyButtons) attachCopyButtons();
+    });
+    </script>
+</body>
+</html>

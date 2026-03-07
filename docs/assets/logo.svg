@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+  <!-- Outer glow ring -->
+  <circle cx="80" cy="80" r="72" stroke="rgba(200,80,200,0.18)" stroke-width="2"/>
+  <!-- Shield body -->
+  <path d="M80 20 L130 44 L130 88 Q130 120 80 142 Q30 120 30 88 L30 44 Z"
+        fill="rgba(26,13,26,0.9)" stroke="rgba(200,80,200,0.6)" stroke-width="2.5"/>
+  <!-- Inner shield highlight -->
+  <path d="M80 32 L120 52 L120 88 Q120 112 80 130 Q40 112 40 88 L40 52 Z"
+        fill="rgba(180,0,180,0.08)"/>
+  <!-- S letterform -->
+  <text x="80" y="100" text-anchor="middle" font-family="Geist,system-ui,sans-serif"
+        font-size="62" font-weight="700" fill="rgba(220,120,220,0.95)"
+        style="letter-spacing:-2px">S</text>
+</svg>
