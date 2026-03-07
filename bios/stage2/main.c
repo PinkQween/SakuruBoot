@@ -202,10 +202,12 @@ static void scan_cb(const char *name, bool is_dir, void *ctx) {
 
 extern const OSLoader vios_loader;
 extern const OSLoader linux_loader;
+extern const OSLoader windows_loader;
 
 static const OSLoader *loader_registry[] = {
     &vios_loader,
     &linux_loader,
+    &windows_loader,
     NULL,
 };
 

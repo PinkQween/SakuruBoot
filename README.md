@@ -10,7 +10,8 @@ SakuruBoot presents an interactive boot menu read from a simple `sakuru.cfg` fil
 
 - **Dual firmware support** — UEFI (x86\_64 `BOOTX64.EFI` · AArch64 `BOOTAA64.EFI`) and legacy BIOS (MBR + Stage 2)
 - **Config-driven menu** — human-readable `sakuru.cfg` with theming, timeout, and per-entry options
-- **Multiple kernel types** — `elf64`, `linux`, `multiboot2`, `uefi_shell`
+- **Multiple kernel types** — `elf64`, `linux`, `multiboot2`, `windows`, `uefi_shell`
+- **Windows dual-boot** — UEFI: chain-loads `bootmgfw.efi` via `LoadImage`/`StartImage` (BitLocker & BCD transparent); BIOS: VBR chain-load from the active NTFS partition
 - **LUKS full-disk encryption** — LUKS1 (PBKDF2) and LUKS2 (Argon2id/Argon2i/PBKDF2) in-bootloader unlock; passphrase prompt with masking, optional key file
 - **Theming** — configurable background and accent colors via EFI color names
 - **ext4 read support** (UEFI path) and FAT32 (BIOS path), including ext4-on-LUKS layering

@@ -87,6 +87,11 @@
                 <p>Zero stdlib dependencies — <code>-ffreestanding -nostdlib</code>. Every helper is hand-rolled. Fits comfortably in the EFI partition.</p>
             </div>
             <div class="feature-card">
+                <span class="feature-icon">🪟</span>
+                <h3>Windows Dual-Boot</h3>
+                <p>Chain-loads <code>bootmgfw.efi</code> directly via UEFI <code>LoadImage</code>. BitLocker, BCD, and Fast Startup all work transparently. BIOS VBR chain-load also supported.</p>
+            </div>
+            <div class="feature-card">
                 <span class="feature-icon">🔓</span>
                 <h3>Open Source</h3>
                 <p>MIT licensed. Hack it, fork it, ship it. Contributions welcome — from crypto backends to new filesystem drivers.</p>

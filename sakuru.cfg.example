@@ -60,3 +60,25 @@ luks_tries  = 3
 # luks_keyfile: optional path to a key file on the boot partition
 # (leave unset to prompt for a passphrase)
 # luks_keyfile = /boot/luks.key
+
+; ----------------------------------------------------------------
+; Windows dual-boot entry (UEFI)
+; ----------------------------------------------------------------
+; SakuruBoot will scan every EFI System Partition for:
+;   \EFI\Microsoft\Boot\bootmgfw.efi
+; and chain-load the first one it finds.
+; Specify `kernel` to override the path (e.g. if you moved bootmgfw.efi).
+; Windows Boot Manager handles everything from here — BCD, BitLocker,
+; fast-startup state, etc.  Do NOT set encrypted=yes; BitLocker is
+; transparent to the bootloader.
+[entry:Windows 11]
+type   = windows
+; kernel = \EFI\Microsoft\Boot\bootmgfw.efi  ; optional — auto-detected by default
+
+; ----------------------------------------------------------------
+; Windows dual-boot entry (BIOS / Legacy MBR)
+; ----------------------------------------------------------------
+; SakuruBoot reads the VBR of the first active (bootable-flagged) NTFS
+; partition and jumps to it.  No kernel path is needed for BIOS mode.
+; [entry:Windows (BIOS)]
+; type = windows

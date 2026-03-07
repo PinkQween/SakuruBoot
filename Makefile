@@ -68,6 +68,7 @@ UEFI_X86_SRCS = \
 	os/elf_loader.c \
 	os/vios.c \
 	os/linux.c \
+	os/windows.c \
 	$(LUKS_SRCS)
 
 UEFI_X86_CFLAGS = $(COMMON_CFLAGS) -fshort-wchar -mno-red-zone -DSAKURU_UEFI
@@ -96,6 +97,7 @@ UEFI_ARM_SRCS = \
 	os/elf_loader.c \
 	os/vios.c \
 	os/linux.c \
+	os/windows.c \
 	$(LUKS_SRCS)
 
 UEFI_ARM_CFLAGS = $(COMMON_CFLAGS) -fshort-wchar -DSAKURU_UEFI
@@ -124,7 +126,8 @@ BIOS_STAGE2_SRCS = \
 	common/menu.c \
 	os/elf_loader.c \
 	os/vios.c \
-	os/linux.c
+	os/linux.c \
+	os/windows.c
 
 BIOS_CFLAGS = \
 	-std=c11 -m64 \

@@ -111,9 +111,11 @@ static int ends_with_ci(const char *s, const char *suf) {
 }
 
 OSType config_guess_type(const char *filename) {
-    if (ends_with_ci(filename, ".elf"))   return OS_TYPE_ELF64;
-    if (str_starts(filename, "vmlinuz"))  return OS_TYPE_LINUX;
-    if (str_starts(filename, "bzImage"))  return OS_TYPE_LINUX;
+    if (ends_with_ci(filename, ".elf"))          return OS_TYPE_ELF64;
+    if (str_starts(filename, "vmlinuz"))         return OS_TYPE_LINUX;
+    if (str_starts(filename, "bzImage"))         return OS_TYPE_LINUX;
+    if (cfg_str_eq_ci(filename, "bootmgfw.efi")) return OS_TYPE_WINDOWS;
+    if (cfg_str_eq_ci(filename, "bootmgr.efi"))  return OS_TYPE_WINDOWS;
     return OS_TYPE_UNKNOWN;
 }
 
@@ -144,6 +146,11 @@ void config_make_name(const char *dir, const char *filename, OSType type,
             out[i] = filename[i]; i++;
         }
         out[i] = 0;
+        return;
+    }
+
+    if (type == OS_TYPE_WINDOWS) {
+        str_copy(out, "Windows", max);
         return;
     }
 
@@ -188,6 +195,7 @@ OSType config_parse_type(const char *str) {
     if (str_eq(str, "elf64"))      return OS_TYPE_ELF64;
     if (str_eq(str, "linux"))      return OS_TYPE_LINUX;
     if (str_eq(str, "multiboot2")) return OS_TYPE_MULTIBOOT2;
+    if (str_eq(str, "windows"))    return OS_TYPE_WINDOWS;
     return OS_TYPE_UNKNOWN;
 }
 

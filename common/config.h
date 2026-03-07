@@ -14,6 +14,7 @@ typedef enum {
     OS_TYPE_LINUX,       /* Linux bzImage + optional initrd       */
     OS_TYPE_MULTIBOOT2,  /* Multiboot2-compliant kernel            */
     OS_TYPE_UEFI_SHELL,  /* Launch UEFI interactive shell          */
+    OS_TYPE_WINDOWS,     /* Windows Boot Manager chain-load (UEFI: bootmgfw.efi; BIOS: VBR) */
     OS_TYPE_UNKNOWN,
 } OSType;
 

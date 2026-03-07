@@ -976,10 +976,12 @@ static EFI_STATUS exit_boot_services(EFI_HANDLE image, BootInfo *info) {
 /* ------------------------------------------------------------------ */
 extern const OSLoader vios_loader;
 extern const OSLoader linux_loader;
+extern const OSLoader windows_loader;
 
 static const OSLoader *loader_registry[] = {
     &vios_loader,
     &linux_loader,
+    &windows_loader,
     NULL,
 };
 
