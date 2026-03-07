@@ -1,0 +1,49 @@
+# sakuru.cfg — SakuruBoot configuration file
+#
+# Syntax:
+#   Global options at the top (timeout, default, theme, accent).
+#   Each OS entry begins with [entry:DisplayName].
+#   Options inside an entry:
+#     type    = elf64 | linux | multiboot2
+#     kernel  = /path/to/kernel
+#     initrd  = /path/to/initrd  (optional)
+#     cmdline = kernel arguments  (optional)
+#
+# Paths are relative to the root of the boot partition (FAT32).
+# Use forward slashes.
+
+# Seconds to wait before auto-booting the default entry.
+# Set to 0 to boot immediately.
+timeout = 5
+
+# Zero-based index of the default boot entry.
+default = 0
+
+# Theme color — background of the border box and selected entry row.
+# Allowed values (EFI background colors, 0-7 only):
+#   black  blue  green  cyan  red  magenta  brown  lightgray
+theme = magenta
+
+# Accent color — color of the title text, selector arrow (»), and hint line.
+# Allowed values (any EFI foreground color):
+#   black  blue  green  cyan  red  magenta  brown  lightgray
+#   darkgray  lightblue  lightgreen  lightcyan  lightred  lightmagenta
+#   yellow  white
+accent = yellow
+
+[entry:ViOS]
+type    = elf64
+kernel  = /boot/vios/kernel.elf
+cmdline = console=ttyS0,115200 loglevel=3
+
+[entry:Linux]
+type    = linux
+kernel  = /boot/vmlinuz
+initrd  = /boot/initrd.img
+cmdline = root=/dev/sda2 rw quiet splash
+
+[entry:Linux (recovery)]
+type    = linux
+kernel  = /boot/vmlinuz
+initrd  = /boot/initrd.img
+cmdline = root=/dev/sda2 rw single

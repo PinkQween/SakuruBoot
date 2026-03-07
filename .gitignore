@@ -1,0 +1,22 @@
+# Build output
+build/
+
+# Config (user-specific, derived from sakuru.cfg.example)
+sakuru.cfg
+
+# Object files and binaries
+*.o
+*.bin
+*.efi
+*.elf
+*.img
+*.iso
+
+# Logs
+*.log
+
+# Editor cruft
+.vscode/
+.idea/
+*.swp
+*~
