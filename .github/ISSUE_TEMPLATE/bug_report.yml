@@ -1,0 +1,79 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in SakuruBoot
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as possible.
+
+  - type: dropdown
+    id: target
+    attributes:
+      label: Affected target
+      description: Which build target(s) are affected?
+      multiple: true
+      options:
+        - UEFI x86_64 (BOOTX64.EFI)
+        - UEFI AArch64 (BOOTAA64.EFI)
+        - BIOS (mbr.bin / stage2.bin)
+        - Build system / Makefile
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: SakuruBoot version
+      description: Run `grep SAKURUBOOT_VERSION common/version.h`
+      placeholder: "0.1"
+    validations:
+      required: true
+
+  - type: input
+    id: host
+    attributes:
+      label: Host OS and toolchain
+      description: e.g. "Ubuntu 24.04, gcc 13.2, nasm 2.16, mingw-w64 12"
+      placeholder: "Ubuntu 24.04, gcc 13.2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Exact `make` command or QEMU invocation that triggers the bug
+      placeholder: |
+        1. `make efi-disk`
+        2. `./run.sh`
+        3. Select "ViOS" in the menu
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the full error output or a screenshot
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: sakuru.cfg (if relevant)
+      description: Paste your config file — redact any sensitive paths if needed
+      render: ini
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

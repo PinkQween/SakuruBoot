@@ -1,0 +1,56 @@
+name: Feature Request
+description: Suggest a new feature or improvement for SakuruBoot
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting, please check that a similar request doesn't already exist.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What use case or limitation is this request addressing?
+      placeholder: "I need SakuruBoot to support X because..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you'd like to see implemented
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Config parser
+        - Boot menu / UI
+        - ELF loader
+        - Linux loader
+        - Multiboot2 loader
+        - UEFI support
+        - BIOS support
+        - ext4 / filesystem drivers
+        - Build system
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you considered any workarounds or alternative approaches?
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
