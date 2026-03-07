@@ -47,3 +47,16 @@ type    = linux
 kernel  = /boot/vmlinuz
 initrd  = /boot/initrd.img
 cmdline = root=/dev/sda2 rw single
+
+[entry:Linux (encrypted root)]
+type        = linux
+encrypted   = yes
+kernel      = /boot/vmlinuz
+initrd      = /boot/initrd.img
+# cmdline should include the decrypted device mapping for the initrd
+cmdline     = root=/dev/mapper/luks-root rw quiet splash
+# luks_tries: how many passphrase attempts before giving up (default 3)
+luks_tries  = 3
+# luks_keyfile: optional path to a key file on the boot partition
+# (leave unset to prompt for a passphrase)
+# luks_keyfile = /boot/luks.key

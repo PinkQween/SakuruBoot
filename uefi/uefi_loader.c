@@ -7,7 +7,9 @@
 #include "ext4.h"
 #include "../common/config.h"
 #include "../common/menu.h"
+#include "../common/passphrase.h"
 #include "../os/os_loader.h"
+#include "../luks/luks_vol.h"
 
 /* ------------------------------------------------------------------ */
 /* Globals set by uefi_main                                            */
@@ -19,6 +21,23 @@ EFI_HANDLE         gImage;
 /* The SFS handle of the volume SakuruBoot was loaded from.
  * Set by find_boot_volume(); used to prioritise that volume in scans. */
 static EFI_HANDLE g_boot_sfs_handle = NULL;
+
+/* ------------------------------------------------------------------ */
+/* Memory helpers used by crypto/argon2 and luks/luks_vol             */
+/* ------------------------------------------------------------------ */
+typedef EFI_STATUS (EFIAPI *AllocPoolFn)(UINTN, UINTN, void **);
+typedef EFI_STATUS (EFIAPI *FreePoolFn)(void *);
+#define bs_alloc_pool ((AllocPoolFn)(gBS->AllocatePool))
+#define bs_free_pool  ((FreePoolFn) (gBS->FreePool))
+
+void *gBS_alloc_pool(u32 size) {
+    void *p = NULL;
+    bs_alloc_pool(EfiLoaderData, (UINTN)size, &p);
+    return p;
+}
+void gBS_free_pool(void *p) {
+    if (p) bs_free_pool(p);
+}
 
 /* Active theme/accent colors — set from config before menu is shown.
  * theme_color  : 0-7  (EFI bg index: 5 = magenta by default)
@@ -1528,6 +1547,116 @@ EFI_STATUS uefi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *st) {
         return launch_uefi_shell(root);
     }
 
+    /* ----------------------------------------------------------------
+     * LUKS unlock (if this entry has encrypted = yes)
+     * We resolve the filesystem context for this entry, then try to
+     * mount it as a LUKS volume using a prompted passphrase.
+     * On success, the ext4 layer is re-mounted on top of the LUKS vol.
+     * ---------------------------------------------------------------- */
+    static FsCtx fallback_fat_ctx;
+    fallback_fat_ctx.kind = FS_FAT;
+    fallback_fat_ctx.fat  = root;
+    FsCtx *load_ctx = g_entry_ctx[sel] ? g_entry_ctx[sel] : &fallback_fat_ctx;
+
+    if (entry->encrypted) {
+        /* We only support LUKS on ext4 volumes (block device access required) */
+        if (load_ctx->kind == FS_EXT4 && load_ctx->ext4) {
+            /* Get the raw EFI block IO handle backing this ext4 volume */
+            /* Note: ext4_get_part_handle() is provided by ext4.c */
+            EFI_HANDLE part_handle = ext4_get_part_handle(load_ctx->ext4);
+            if (part_handle) {
+                /* Build a LuksReadFn that reads raw sectors via EFI BlockIO */
+                typedef EFI_STATUS (EFIAPI *BlkReadFn)
+                    (void*, UINT32, EFI_LBA, UINTN, void*);
+                typedef struct {
+                    void     *Revision;
+                    void     *Media;
+                    BlkReadFn ReadBlocks;
+                } EFI_BIO_SIMPLE;
+                typedef EFI_BIO_SIMPLE *EFI_BLOCK_IO;
+                static EFI_GUID bio_guid = {0x964e5b21,0x6459,0x11d2,
+                    {0x8e,0x39,0x00,0xa0,0xc9,0x69,0x72,0x3b}};
+                EFI_BLOCK_IO bio = NULL;
+                gBS->HandleProtocol(part_handle, &bio_guid, (void**)&bio);
+
+                if (bio) {
+                    /* Passphrase prompt loop */
+                    static u8 passphrase_buf[256];
+                    int luks_ok = 0;
+                    int tries = (entry->luks_tries > 0) ? entry->luks_tries : 3;
+
+                    /* If a key file is specified, read it from the boot FAT */
+                    if (entry->luks_keyfile[0] && root) {
+                        EFI_FILE_PROTOCOL *kf = NULL;
+                        CHAR16 kfw[256]; utf8_to_ucs2(kfw, entry->luks_keyfile, 256);
+                        if (!root->Open(root, &kf, kfw, 1 /*EFI_FILE_MODE_READ*/, 0)) {
+                            UINTN kfsz = 255;
+                            kf->Read(kf, &kfsz, passphrase_buf);
+                            passphrase_buf[kfsz] = 0;
+                            kf->Close(kf);
+                            tries = 1; /* single attempt with key file */
+                        }
+                    }
+
+                    for (int attempt = 0; attempt < tries && !luks_ok; attempt++) {
+                        u32 plen = 0;
+                        if (!entry->luks_keyfile[0]) {
+                            char prompt[128] = "LUKS passphrase";
+                            if (attempt > 0) {
+                                prompt[15] = ' '; prompt[16]='(';
+                                prompt[17] = (char)('1'+attempt);
+                                prompt[18] = '/';
+                                prompt[19] = (char)('0'+tries);
+                                prompt[20] = ')'; prompt[21] = 0;
+                            }
+                            con_puts("  "); con_puts(prompt); con_puts(": ");
+                            plen = passphrase_read(passphrase_buf, sizeof(passphrase_buf),
+                                                   &menu_ops, "");
+                        } else {
+                            /* already filled from key file */
+                            for (plen=0; passphrase_buf[plen]; plen++);
+                        }
+
+                        /* Build a LUKS read callback over EFI BlockIO */
+                        typedef struct { EFI_BLOCK_IO bio; } BlkCtx;
+                        /* Use a simple inline lambda via static */
+                        static EFI_BLOCK_IO s_bio;
+                        s_bio = bio;
+
+                        /* Try to open the LUKS volume */
+                        /* We read directly via BlockIO using luks_open */
+                        /* The LuksReadFn adapter is defined inline below */
+                        LuksVol *lv = luks_open_efi(bio, passphrase_buf, plen);
+                        passphrase_wipe(passphrase_buf, sizeof(passphrase_buf));
+
+                        if (lv) {
+                            /* Re-mount ext4 on top of the LUKS volume */
+                            ext4_unmount(load_ctx->ext4);
+                            load_ctx->ext4 = ext4_mount_luks(lv);
+                            if (load_ctx->ext4) {
+                                luks_ok = 1;
+                                con_puts("  LUKS: unlocked\n");
+                            } else {
+                                luks_vol_close(lv);
+                                con_error("LUKS: ext4 mount on decrypted volume failed");
+                            }
+                        } else {
+                            con_error("LUKS: wrong passphrase or unsupported format");
+                        }
+                    }
+                    if (!luks_ok) {
+                        con_error("LUKS: failed to unlock after maximum attempts");
+                        return EFI_ACCESS_DENIED;
+                    }
+                }
+            }
+        } else {
+            /* FAT-based entries with encrypted=yes: inject cryptdevice only via cmdline */
+            con_puts("  Note: LUKS passphrase-only mode (FAT boot partition)\n");
+            con_puts("  The initrd will handle LUKS unlock.\n");
+        }
+    }
+
     /* Find appropriate OS loader */
     const OSLoader *loader = find_loader(entry);
     if (!loader) {
@@ -1556,10 +1685,6 @@ EFI_STATUS uefi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *st) {
     gather_rsdp(boot_info);
 
     /* Load kernel — use the filesystem context where this entry was found */
-    static FsCtx fallback_fat_ctx;
-    fallback_fat_ctx.kind = FS_FAT;
-    fallback_fat_ctx.fat  = root;  /* may be NULL if open_root() failed */
-    FsCtx *load_ctx = g_entry_ctx[sel] ? g_entry_ctx[sel] : &fallback_fat_ctx;
     if (!load_ctx->fat && load_ctx->kind == FS_FAT) {
         con_error("Kernel load failed - no filesystem context for this entry");
         return EFI_LOAD_ERROR;

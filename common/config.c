@@ -229,7 +229,8 @@ static int do_parse(const char *buf, u32 len, BootConfig *cfg, bool merge) {
                     /* Zero the entry */
                     for (u32 i = 0; i < sizeof(BootEntry); i++)
                         ((u8*)cur)[i] = 0;
-                    cur->type = OS_TYPE_ELF64; /* default */
+                    cur->type      = OS_TYPE_ELF64; /* default */
+                    cur->luks_tries = 3;            /* default passphrase attempts */
 
                     u32 ni = 0;
                     while (*p && *p != ']' && !is_newline(*p)) {
@@ -281,8 +282,14 @@ static int do_parse(const char *buf, u32 len, BootConfig *cfg, bool merge) {
             /* Entry-specific settings */
             if      (str_eq(key, "type"))   cur->type = config_parse_type(val);
             else if (str_eq(key, "kernel")) str_copy(cur->kernel,  val, MAX_STR_LEN);
-            else if (str_eq(key, "initrd")) str_copy(cur->initrd,  val, MAX_STR_LEN);
-            else if (str_eq(key, "cmdline"))str_copy(cur->cmdline, val, MAX_STR_LEN);
+            else if (str_eq(key, "initrd"))      str_copy(cur->initrd,       val, MAX_STR_LEN);
+            else if (str_eq(key, "cmdline"))     str_copy(cur->cmdline,      val, MAX_STR_LEN);
+            else if (str_eq(key, "encrypted"))   cur->encrypted    = (val[0]=='1'||val[0]=='y'||val[0]=='t') ? 1 : 0;
+            else if (str_eq(key, "luks_keyfile"))str_copy(cur->luks_keyfile, val, MAX_STR_LEN);
+            else if (str_eq(key, "luks_tries")) {
+                int t=0; for(int i=0;val[i]>='0'&&val[i]<='9';i++) t=t*10+(val[i]-'0');
+                cur->luks_tries = (t>0)?t:3;
+            }
         }
     }
 

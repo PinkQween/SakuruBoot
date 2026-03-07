@@ -11,8 +11,9 @@ SakuruBoot presents an interactive boot menu read from a simple `sakuru.cfg` fil
 - **Dual firmware support** — UEFI (x86\_64 `BOOTX64.EFI` · AArch64 `BOOTAA64.EFI`) and legacy BIOS (MBR + Stage 2)
 - **Config-driven menu** — human-readable `sakuru.cfg` with theming, timeout, and per-entry options
 - **Multiple kernel types** — `elf64`, `linux`, `multiboot2`, `uefi_shell`
+- **LUKS full-disk encryption** — LUKS1 (PBKDF2) and LUKS2 (Argon2id/Argon2i/PBKDF2) in-bootloader unlock; passphrase prompt with masking, optional key file
 - **Theming** — configurable background and accent colors via EFI color names
-- **ext4 read support** (UEFI path) and FAT32 (BIOS path)
+- **ext4 read support** (UEFI path) and FAT32 (BIOS path), including ext4-on-LUKS layering
 - **Auto-discovery** — scans mounted volumes for kernels when no config is present
 
 ---
@@ -82,6 +83,9 @@ cmdline = root=/dev/sda2 rw quiet splash
 | `kernel` | Path to the kernel image on the boot partition |
 | `initrd` | *(optional)* Path to the initial ramdisk |
 | `cmdline` | *(optional)* Kernel command-line arguments |
+| `encrypted` | `yes` to enable LUKS unlock for this entry |
+| `luks_keyfile` | *(optional)* Path to a key file; if unset, prompts for passphrase |
+| `luks_tries` | Passphrase attempts before giving up (default: `3`) |
 
 ---
 

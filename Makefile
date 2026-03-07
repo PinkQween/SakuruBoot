@@ -43,6 +43,19 @@ COMMON_CFLAGS = \
 	-O2 \
 	-Wall -Wextra
 
+LUKS_SRCS = \
+	crypto/sha.c \
+	crypto/hmac.c \
+	crypto/pbkdf2.c \
+	crypto/blake2b.c \
+	crypto/argon2.c \
+	crypto/aes.c \
+	crypto/cipher.c \
+	luks/luks1.c \
+	luks/luks2.c \
+	luks/luks_vol.c \
+	common/passphrase.c
+
 # ----------------------------------------------------------------
 # UEFI x86_64
 # ----------------------------------------------------------------
@@ -54,7 +67,8 @@ UEFI_X86_SRCS = \
 	common/menu.c \
 	os/elf_loader.c \
 	os/vios.c \
-	os/linux.c
+	os/linux.c \
+	$(LUKS_SRCS)
 
 UEFI_X86_CFLAGS = $(COMMON_CFLAGS) -fshort-wchar -mno-red-zone -DSAKURU_UEFI
 
@@ -81,7 +95,8 @@ UEFI_ARM_SRCS = \
 	common/menu.c \
 	os/elf_loader.c \
 	os/vios.c \
-	os/linux.c
+	os/linux.c \
+	$(LUKS_SRCS)
 
 UEFI_ARM_CFLAGS = $(COMMON_CFLAGS) -fshort-wchar -DSAKURU_UEFI
 

@@ -100,13 +100,40 @@ struct Ext4Vol {
     UINT32  first_data_block;   /* 0 for 4K blocks, 1 for 1K blocks */
     UINT64  bgdt_off;           /* byte offset of block group descriptor table */
     UINT32  desc_size;          /* bytes per block group descriptor (32 or 64) */
+    EFI_HANDLE part_handle;     /* partition handle (NULL for LUKS-backed volumes) */
+    /* LUKS-backed volume — when non-NULL, read_bytes goes through luks_vol_read */
+    struct LuksVol *luks_vol;
 };
 
 /*
  * Read byte_count bytes from byte_off into buf.
  * Uses DiskIO if available, otherwise falls back to block-aligned BlockIO reads.
+ * If vol->luks_vol is set, reads through the LUKS decryption layer instead.
  */
 static EFI_STATUS read_bytes(Ext4Vol *v, UINT64 byte_off, UINTN byte_count, void *buf) {
+    if (v->luks_vol) {
+        /* LUKS-backed: read via 512-byte sector interface */
+        UINT64 first_sec = byte_off / 512;
+        UINT64 last_sec  = (byte_off + byte_count - 1) / 512;
+        UINTN  nsecs     = (UINTN)(last_sec - first_sec + 1);
+        UINTN  total     = nsecs * 512;
+
+        void *tmp = NULL;
+        EFI_STATUS s = gBS->AllocatePool(EfiLoaderData, total, (void **)&tmp);
+        if (EFI_ERROR(s)) return s;
+
+        /* luks_vol_read is declared in luks_vol.h */
+        extern int luks_vol_read(struct LuksVol *, UINT64, uint8_t *, UINT32);
+        int r = luks_vol_read(v->luks_vol, first_sec, (uint8_t*)tmp, (UINT32)nsecs);
+        if (r == 0) {
+            UINTN src_off = (UINTN)(byte_off - first_sec * 512);
+            for (UINTN i = 0; i < byte_count; i++)
+                ((uint8_t *)buf)[i] = ((uint8_t *)tmp)[src_off + i];
+        }
+        gBS->FreePool(tmp);
+        return (r == 0) ? EFI_SUCCESS : EFI_DEVICE_ERROR;
+    }
+
     if (v->dio)
         return v->dio->ReadDisk(v->dio, v->media_id, byte_off, byte_count, buf);
 
@@ -174,6 +201,8 @@ Ext4Vol *ext4_mount(EFI_HANDLE h) {
     v->bio              = bio;
     v->media_id         = bio->Media->MediaId;
     v->phys_blk_sz      = tmp.phys_blk_sz;
+    v->part_handle      = h;
+    v->luks_vol         = NULL;
     v->block_size       = 1024u << r32(sb, SB_LOG_BLOCK_SIZE);
     v->inodes_per_group = r32(sb, SB_INODES_PER_GROUP);
     v->first_data_block = r32(sb, SB_FIRST_DATA_BLOCK);
@@ -191,6 +220,47 @@ Ext4Vol *ext4_mount(EFI_HANDLE h) {
 
 void ext4_unmount(Ext4Vol *v) {
     if (v) gBS->FreePool(v);
+}
+
+EFI_HANDLE ext4_get_part_handle(Ext4Vol *vol) {
+    return vol ? vol->part_handle : NULL;
+}
+
+Ext4Vol *ext4_mount_luks(struct LuksVol *lv) {
+    if (!lv) return NULL;
+
+    /* Read superblock via LUKS layer to verify ext4 */
+    extern int luks_vol_read(struct LuksVol *, UINT64, uint8_t *, UINT32);
+
+    /* Superblock is at byte offset 1024; that's sectors 2 and 3 */
+    uint8_t sb_buf[512*3];
+    if (luks_vol_read(lv, 0, sb_buf, 3) != 0) return NULL;
+    uint8_t *sb = sb_buf + 1024;
+    if (r16(sb, SB_MAGIC) != EXT4_SUPER_MAGIC) return NULL;
+
+    Ext4Vol *v = NULL;
+    if (EFI_ERROR(gBS->AllocatePool(EfiLoaderData, sizeof(Ext4Vol), (void **)&v)) || !v)
+        return NULL;
+    for (UINTN i = 0; i < sizeof(Ext4Vol); i++) ((uint8_t *)v)[i] = 0;
+
+    v->luks_vol         = lv;
+    v->dio              = NULL;
+    v->bio              = NULL;
+    v->media_id         = 0;
+    v->phys_blk_sz      = 512;
+    v->part_handle      = NULL;
+    v->block_size       = 1024u << r32(sb, SB_LOG_BLOCK_SIZE);
+    v->inodes_per_group = r32(sb, SB_INODES_PER_GROUP);
+    v->first_data_block = r32(sb, SB_FIRST_DATA_BLOCK);
+    v->inode_size       = r16(sb, SB_INODE_SIZE);
+    if (v->inode_size < 128) v->inode_size = 128;
+    v->bgdt_off  = (UINT64)(v->first_data_block + 1) * v->block_size;
+
+    uint32_t f_incompat = r32(sb, SB_FEATURE_INCOMPAT);
+    uint16_t ds         = r16(sb, SB_DESC_SIZE);
+    v->desc_size = ((f_incompat & EXT4_FEATURE_INCOMPAT_64BIT) && ds >= 64) ? 64u : 32u;
+
+    return v;
 }
 
 /* ------------------------------------------------------------------ */

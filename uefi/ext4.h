@@ -46,3 +46,17 @@ UINTN ext4_stat(Ext4Vol *vol, const char *path);
  */
 typedef void (*Ext4DirCb)(void *ctx, const char *name, bool is_dir);
 void ext4_readdir(Ext4Vol *vol, const char *path, Ext4DirCb cb, void *ctx);
+
+/*
+ * Return the EFI partition handle this ext4 volume was mounted from.
+ * Used by the LUKS integration to get block-level access.
+ */
+EFI_HANDLE ext4_get_part_handle(Ext4Vol *vol);
+
+/*
+ * Mount an ext4 volume on top of an already-unlocked LUKS volume.
+ * The LuksVol read function is used as the block device backend.
+ * Returns NULL if the LUKS-decrypted payload is not ext4.
+ */
+struct LuksVol;
+Ext4Vol *ext4_mount_luks(struct LuksVol *lv);

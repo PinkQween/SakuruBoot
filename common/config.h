@@ -23,6 +23,10 @@ typedef struct {
     char    kernel[MAX_STR_LEN];  /* Path to kernel image       */
     char    initrd[MAX_STR_LEN];  /* Optional initrd/ramdisk    */
     char    cmdline[MAX_STR_LEN]; /* Kernel command-line args   */
+    /* LUKS encryption */
+    int     encrypted;            /* 1 = partition is LUKS-encrypted */
+    char    luks_keyfile[MAX_STR_LEN]; /* Optional key file path (empty = prompt) */
+    int     luks_tries;           /* Passphrase attempts before giving up (default 3) */
 } BootEntry;
 
 typedef struct {
