@@ -8,6 +8,10 @@
 #include "../common/config.h"
 #include "../common/menu.h"
 #include "../common/passphrase.h"
+#include "../common/efivar.h"
+#include "../common/bootcount.h"
+#include "../common/loader_entry.h"
+#include "../common/serial.h"
 #include "../os/os_loader.h"
 #include "../luks/luks_vol.h"
 
@@ -1506,6 +1510,14 @@ EFI_STATUS uefi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *st) {
         config.num_entries++;
     }
 
+    /* Scan /loader/entries/ on the boot volume for systemd-boot Type 1 entries */
+    if (root) loader_entry_scan(root, &config);
+
+    /* Initialise serial debug console (requires gBS/gST to be valid) */
+    serial_init();
+    dbg("[SakuruBoot] config loaded, entries: ");
+    dbghex(config.num_entries);
+
     if (config.num_entries == 0) {
         con_error("No bootable kernels found on any disk.\r\n"
                   "  Searched: /boot/ and /EFI/Linux/ on each FAT volume\r\n"
@@ -1537,7 +1549,29 @@ EFI_STATUS uefi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *st) {
     menu_ops.cols        = (int)con_cols;
     menu_ops.rows        = (int)con_rows;
 
+    /* Restore last-selected entry as the menu default */
+    u32 last_sel = 0;
+    if (efivar_load_last_entry(&last_sel) == 0 &&
+        last_sel < config.num_entries) {
+        config.default_entry = last_sel;
+    }
+
+    /* Check if the last-selected entry has hit its boot-failure limit */
+    if (bootcount_should_fallback(config.default_entry) &&
+        config.num_entries > 1) {
+        /* Fall back to entry 0 (the original default) */
+        u32 bad = config.default_entry;
+        config.default_entry = 0;
+        dbg("[SakuruBoot] bootcount fallback: entry ");
+        dbghex(bad);
+    }
+
     int sel = menu_run(&config, &menu_ops);
+
+    /* Persist selection and increment boot-attempt counter */
+    efivar_save_last_entry((u32)sel);
+    bootcount_increment((u32)sel);
+
     BootEntry *entry = &config.entries[sel];
 
     con_puts("\nBooting: ");

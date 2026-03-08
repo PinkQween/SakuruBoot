@@ -59,12 +59,19 @@ LUKS_SRCS = \
 # ----------------------------------------------------------------
 # UEFI x86_64
 # ----------------------------------------------------------------
+UEFI_COMMON_SRCS = \
+	common/efivar.c \
+	common/bootcount.c \
+	common/loader_entry.c \
+	common/serial.c
+
 UEFI_X86_SRCS = \
 	uefi/x86_64/entry.c \
 	uefi/uefi_loader.c \
 	uefi/ext4.c \
 	common/config.c \
 	common/menu.c \
+	$(UEFI_COMMON_SRCS) \
 	os/elf_loader.c \
 	os/vios.c \
 	os/linux.c \
@@ -94,6 +101,7 @@ UEFI_ARM_SRCS = \
 	uefi/ext4.c \
 	common/config.c \
 	common/menu.c \
+	$(UEFI_COMMON_SRCS) \
 	os/elf_loader.c \
 	os/vios.c \
 	os/linux.c \
