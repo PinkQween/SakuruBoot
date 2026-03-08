@@ -177,6 +177,13 @@ Ext4Vol *ext4_mount(EFI_HANDLE h) {
     if (!bio || !bio->Media) return NULL;
     /* DiskIO is preferred but optional — BlockIO fallback used if absent */
     if (!bio->Media->MediaPresent || bio->Media->BlockSize == 0) return NULL;
+    /* Only scan logical partitions (not raw whole-disk or optical handles).
+     * Whole-disk and CD/DVD handles often hang or return garbage on reads. */
+    if (!bio->Media->LogicalPartition) return NULL;
+    /* Need at least 3 sectors to reach the superblock at byte offset 1024 */
+    if (bio->Media->LastBlock < 2) return NULL;
+    /* Skip optical drives (2048-byte blocks) — they can't hold ext4 */
+    if (bio->Media->BlockSize == 2048) return NULL;
 
     /* Build a temporary vol on the stack just to read the superblock */
     Ext4Vol tmp;

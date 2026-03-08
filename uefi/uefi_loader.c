@@ -1470,7 +1470,6 @@ EFI_STATUS uefi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *st) {
 
     scan_all_filesystems(&config);
     scan_all_ext4(&config);
-
     /* Safety net: force-scan the boot volume root even if scan_all_filesystems
      * missed it (HP/consumer firmware sometimes drops the USB SFS handle from
      * LocateHandleBuffer after connect_all_controllers reconnects devices).

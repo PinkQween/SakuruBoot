@@ -9,17 +9,6 @@
 #include "types.h"
 #include "../uefi/efi.h"
 
-/* EFI file protocol function pointer types (void* in efi.h) */
-typedef EFI_STATUS (EFIAPI *FileOpenFn)    (void *, void **, CHAR16 *, u64, u64);
-typedef EFI_STATUS (EFIAPI *FileReadFn)    (void *, UINTN *, void *);
-typedef EFI_STATUS (EFIAPI *FileCloseFn)   (void *);
-typedef EFI_STATUS (EFIAPI *FileSetPosFn)  (void *, u64);
-typedef EFI_STATUS (EFIAPI *FileGetInfoFn) (void *, EFI_GUID *, UINTN *, void *);
-
-/* EFI_FILE_INFO GUID */
-#define EFI_FILE_INFO_GUID \
-    EFI_GUID_INIT(0x09576e92,0x6d3f,0x11d2,0x8e,0x39,0x00,0xa0,0xc9,0x69,0x72,0x3b)
-
 /* EFI attribute flags */
 #define EFI_FILE_MODE_READ   0x0000000000000001ULL
 #ifndef EFI_FILE_DIRECTORY
@@ -119,29 +108,26 @@ static void parse_entry_conf(const char *buf, UINTN len, BootEntry *e) {
 void loader_entry_scan(void *root_dir, BootConfig *cfg) {
     if (!root_dir || !cfg) return;
 
+    EFI_FILE_PROTOCOL *root = (EFI_FILE_PROTOCOL *)root_dir;
+
     /* Open /loader/entries/ */
-    void *entries_dir = NULL;
+    EFI_FILE_PROTOCOL *entries_dir = NULL;
     CHAR16 entries_path[] = {'\\','l','o','a','d','e','r','\\',
                               'e','n','t','r','i','e','s','\\', 0};
-    FileOpenFn file_open = (FileOpenFn)(((void **)root_dir)[0]);
-    EFI_STATUS s = file_open(root_dir, &entries_dir, entries_path,
-                             EFI_FILE_MODE_READ, 0);
+    EFI_STATUS s = root->Open(root, &entries_dir, entries_path,
+                              EFI_FILE_MODE_READ, 0);
     if (s != 0 || !entries_dir) return;
 
-    FileCloseFn   file_close   = (FileCloseFn)  (((void **)entries_dir)[2]);
-    FileSetPosFn  file_set_pos = (FileSetPosFn) (((void **)entries_dir)[5]);
-    FileGetInfoFn file_get_info= (FileGetInfoFn)(((void **)entries_dir)[8]);
-
-    /* Rewind */
-    file_set_pos(entries_dir, 0);
+    /* Rewind to start of directory */
+    entries_dir->SetPosition(entries_dir, 0);
 
     /* Buffer for EFI_FILE_INFO (name up to 256 chars) */
     u8 info_buf[sizeof(FileInfoHdr) + 256 * sizeof(CHAR16)];
 
     while (cfg->num_entries < MAX_ENTRIES) {
         UINTN info_size = sizeof(info_buf);
-        EFI_GUID fi_guid = EFI_FILE_INFO_GUID;
-        s = file_get_info(entries_dir, &fi_guid, &info_size, info_buf);
+        /* Read next directory entry — each Read on a dir handle returns one EFI_FILE_INFO */
+        s = entries_dir->Read(entries_dir, &info_size, info_buf);
         if (s != 0 || info_size == 0) break;  /* End of directory */
 
         FileInfoHdr *fi = (FileInfoHdr *)info_buf;
@@ -152,20 +138,18 @@ void loader_entry_scan(void *root_dir, BootConfig *cfg) {
         if (!ucs2_ends_with_conf(fname)) continue;
 
         /* Open the .conf file */
-        void *conf_file = NULL;
-        s = file_open(entries_dir, &conf_file, fname,
-                      EFI_FILE_MODE_READ, 0);
+        EFI_FILE_PROTOCOL *conf_file = NULL;
+        s = entries_dir->Open(entries_dir, &conf_file, fname,
+                              EFI_FILE_MODE_READ, 0);
         if (s != 0 || !conf_file) continue;
 
         /* Read entire file (limit to 4 KiB) */
         char fbuf[4096];
         UINTN flen = sizeof(fbuf) - 1;
-        FileReadFn conf_read = (FileReadFn)(((void **)conf_file)[3]);
-        conf_read(conf_file, &flen, fbuf);
+        conf_file->Read(conf_file, &flen, fbuf);
         fbuf[flen] = '\0';
 
-        FileCloseFn conf_close = (FileCloseFn)(((void **)conf_file)[2]);
-        conf_close(conf_file);
+        conf_file->Close(conf_file);
 
         /* Parse into next available entry */
         BootEntry *e = &cfg->entries[cfg->num_entries];
@@ -185,7 +169,7 @@ void loader_entry_scan(void *root_dir, BootConfig *cfg) {
         if (e->kernel[0] != '\0') cfg->num_entries++;
     }
 
-    file_close(entries_dir);
+    entries_dir->Close(entries_dir);
 }
 
 #endif /* !SAKURU_HOST_TEST */

@@ -183,7 +183,10 @@ static bool find_in_dir(u32 dir_cluster, const char *name,
     (void)is_last_path;
 
     u32 cluster = dir_cluster;
-    while (cluster < FAT32_EOC) {
+    u32 cluster_limit = g_spc ? (g_bpb.total_sectors32 / g_spc) + 2 : 0x100000U;
+    u32 visited = 0;
+    while (cluster >= 2 && cluster < FAT32_EOC) {
+        if (++visited > cluster_limit) return false; /* corrupted FAT chain */
         u32 spc = g_spc;
         disk_read(cluster_to_lba(cluster), spc, cluster_buf);
 
@@ -324,7 +327,7 @@ u32 fat_read(FatFile *f, void *buf, u32 len) {
 
     static u8 clust_buf[512 * 64];
 
-    while (read_tot < len && f->cur_cluster < FAT32_EOC) {
+    while (read_tot < len && f->cur_cluster >= 2 && f->cur_cluster < FAT32_EOC) {
         u32 clust_off = f->offset % clust_sz;
         u32 in_clust  = clust_sz - clust_off;
         if (in_clust > len - read_tot) in_clust = len - read_tot;
@@ -383,7 +386,10 @@ bool fat_readdir(const char *dir_path, FatDirCb cb, void *ctx) {
     int  lfn_len = 0;
 
     u32 cur = cluster;
-    while (cur < FAT32_EOC) {
+    u32 cur_limit = g_spc ? (g_bpb.total_sectors32 / g_spc) + 2 : 0x100000U;
+    u32 cur_visited = 0;
+    while (cur >= 2 && cur < FAT32_EOC) {
+        if (++cur_visited > cur_limit) break; /* corrupted FAT chain */
         disk_read(cluster_to_lba(cur), g_spc, enum_buf);
         u32 cnt = (g_spc * SECTOR_SIZE) / sizeof(FAT32_DirEntry);
         FAT32_DirEntry *dir = (FAT32_DirEntry *)enum_buf;
