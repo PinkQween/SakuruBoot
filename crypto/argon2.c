@@ -112,7 +112,7 @@ static void GB_block(u8 *out, const u8 *x, const u8 *y) {
 /* ------------------------------------------------------------------ */
 /* Index derivation                                                    */
 /* ------------------------------------------------------------------ */
-static u32 index_alpha(u32 pass, u32 lane, u32 slice,
+static u32 index_alpha(u32 pass, u32 lane __attribute__((unused)), u32 slice,
                        u32 lane_len, u32 lanes,
                        u32 index, u32 pseudo_rand,
                        int same_lane) {

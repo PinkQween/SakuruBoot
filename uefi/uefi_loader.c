@@ -830,11 +830,16 @@ char *read_file(void *ctx_ptr, const char *path, UINTN *out_size) {
 /* Gather GOP framebuffer info                                          */
 /* ------------------------------------------------------------------ */
 /* Write a string to COM1 (0x3F8) — safe to call before ExitBootServices */
+/* x86-only: AArch64 uses memory-mapped UART, not port I/O.             */
 static void gop_debug(const char *s) {
+#if defined(__x86_64__) || defined(__i386__)
     while (*s) {
         __asm__ volatile ("outb %0, %1" : : "a"((UINT8)*s), "Nd"((UINT16)0x3F8));
         s++;
     }
+#else
+    (void)s;
+#endif
 }
 
 static void gather_gop(BootInfo *info) {

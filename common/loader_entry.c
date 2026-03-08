@@ -22,7 +22,9 @@ typedef EFI_STATUS (EFIAPI *FileGetInfoFn) (void *, EFI_GUID *, UINTN *, void *)
 
 /* EFI attribute flags */
 #define EFI_FILE_MODE_READ   0x0000000000000001ULL
+#ifndef EFI_FILE_DIRECTORY
 #define EFI_FILE_DIRECTORY   0x0000000000000010ULL
+#endif
 
 /* Minimal EFI_FILE_INFO layout (variable-length; FileName starts at offset 80) */
 typedef struct {
@@ -127,7 +129,6 @@ void loader_entry_scan(void *root_dir, BootConfig *cfg) {
     if (s != 0 || !entries_dir) return;
 
     FileCloseFn   file_close   = (FileCloseFn)  (((void **)entries_dir)[2]);
-    FileReadFn    file_read    = (FileReadFn)   (((void **)entries_dir)[3]);
     FileSetPosFn  file_set_pos = (FileSetPosFn) (((void **)entries_dir)[5]);
     FileGetInfoFn file_get_info= (FileGetInfoFn)(((void **)entries_dir)[8]);
 

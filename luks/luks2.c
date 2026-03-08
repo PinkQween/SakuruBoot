@@ -41,7 +41,7 @@
 static u64 le64r_l(const u8 *p){
     u64 v=0;for(int i=7;i>=0;i--)v=(v<<8)|p[i];return v;
 }
-static u64 be64r_l(const u8 *p){
+static __attribute__((unused)) u64 be64r_l(const u8 *p){
     u64 v=0;for(int i=0;i<8;i++)v=(v<<8)|p[i];return v;
 }
 
@@ -242,10 +242,6 @@ int luks2_unlock(LuksReadFn read_fn, void *read_ctx,
 
     /* Try each keyslot (0..31) */
     for (int slot = 0; slot < 32; slot++) {
-        /* Find keyslot block — look for "\"N\":{" in JSON */
-        char slot_key[4];
-        slot_key[0]=(char)('0'+ slot/10); slot_key[1]=(char)('0'+slot%10); slot_key[2]=0;
-        if(slot<10){ slot_key[0]=(char)('0'+slot); slot_key[1]=0; }
         int vl=0;
         /* Quick check: does this keyslot exist? */
         if(!json_find_key(s2_json,(int)json_size,"key_size",&vl)) {

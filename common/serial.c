@@ -12,9 +12,11 @@ extern EFI_SYSTEM_TABLE  *gST;
 extern EFI_BOOT_SERVICES *gBS;
 
 /* ── EFI Serial I/O Protocol ─────────────────────────────────────────── */
+#ifndef EFI_SERIAL_IO_PROTOCOL_GUID
 #define EFI_SERIAL_IO_PROTOCOL_GUID \
     EFI_GUID_INIT(0xbb25cf6f, 0xf1d4, 0x11d2, \
                   0x9a, 0x0c, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0xfd)
+#endif
 
 #define EFI_DEFAULT_BAUD_RATE   115200ULL
 #define EFI_DEFAULT_DATA_BITS   8
@@ -33,7 +35,9 @@ typedef struct {
 } EFI_SERIAL_IO;
 
 static EFI_SERIAL_IO *s_serial = NULL;
+#if defined(__x86_64__) || defined(__i386__)
 static int             s_x86_fallback = 0;
+#endif
 
 /* ── x86 direct port I/O (COM1 at 0x3F8) ─────────────────────────────── */
 #ifdef __x86_64__

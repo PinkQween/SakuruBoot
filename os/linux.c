@@ -81,7 +81,7 @@ static bool linux_can_load(const BootEntry *entry) {
     return entry->type == OS_TYPE_LINUX;
 }
 
-static void str_copy_n(char *dst, const char *src, u32 max) {
+static __attribute__((unused)) void str_copy_n(char *dst, const char *src, u32 max) {
     u32 i = 0;
     while (i + 1 < max && src[i]) { dst[i] = src[i]; i++; }
     dst[i] = 0;
