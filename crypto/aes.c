@@ -83,20 +83,9 @@ void aes_init_enc(AES_CTX *ctx, const u8 *key, int key_len) {
     }
 }
 
-/* For decryption key schedule we derive the inverse mix-columns keys */
-static u32 inv_mix_col(u32 w){
-    u8 a=(u8)(w>>24),b=(u8)(w>>16),c=(u8)(w>>8),d=(u8)w;
-    u8 r0=gmul(0x0e,a)^gmul(0x0b,b)^gmul(0x0d,c)^gmul(0x09,d);
-    u8 r1=gmul(0x09,a)^gmul(0x0e,b)^gmul(0x0b,c)^gmul(0x0d,d);
-    u8 r2=gmul(0x0d,a)^gmul(0x09,b)^gmul(0x0e,c)^gmul(0x0b,d);
-    u8 r3=gmul(0x0b,a)^gmul(0x0d,b)^gmul(0x09,c)^gmul(0x0e,d);
-    return((u32)r0<<24)|((u32)r1<<16)|((u32)r2<<8)|(u32)r3;
-}
-
 void aes_init_dec(AES_CTX *ctx, const u8 *key, int key_len) {
+    /* Direct inverse cipher uses the same forward key schedule */
     aes_init_enc(ctx, key, key_len);
-    /* Apply InvMixColumns to middle round keys (equivalent inverse cipher) */
-    for(int i=4;i<ctx->nr*4;i++) ctx->rk[i]=inv_mix_col(ctx->rk[i]);
 }
 
 /* ------------------------------------------------------------------ */
@@ -126,10 +115,8 @@ static void mix_columns(u8 s[16]){
 }
 
 void aes_encrypt_block(const AES_CTX *ctx, const u8 in[16], u8 out[16]) {
-    u8 s[16]; for(int i=0;i<16;i++) s[i]=in[i];
-    /* Reinterpret as column-major (AES uses column-major state) */
     u8 state[16];
-    for(int r=0;r<4;r++) for(int c=0;c<4;c++) state[c*4+r]=s[r*4+c];
+    for(int i=0;i<16;i++) state[i]=in[i];
     add_rk(state, ctx->rk);
     for(int rd=1;rd<=ctx->nr;rd++){
         sub_bytes(state);
@@ -137,11 +124,11 @@ void aes_encrypt_block(const AES_CTX *ctx, const u8 in[16], u8 out[16]) {
         if(rd<ctx->nr) mix_columns(state);
         add_rk(state, ctx->rk+rd*4);
     }
-    for(int r=0;r<4;r++) for(int c=0;c<4;c++) out[r*4+c]=state[c*4+r];
+    for(int i=0;i<16;i++) out[i]=state[i];
 }
 
 /* ------------------------------------------------------------------ */
-/* Decrypt one block (equivalent inverse cipher)                       */
+/* Decrypt one block (direct inverse cipher, forward key schedule)    */
 /* ------------------------------------------------------------------ */
 static void inv_sub_bytes(u8 s[16]){for(int i=0;i<16;i++) s[i]=RSBOX[s[i]];}
 static void inv_shift_rows(u8 s[16]){
@@ -162,7 +149,7 @@ static void inv_mix_columns(u8 s[16]){
 
 void aes_decrypt_block(const AES_CTX *ctx, const u8 in[16], u8 out[16]) {
     u8 state[16];
-    for(int r=0;r<4;r++) for(int c=0;c<4;c++) state[c*4+r]=in[r*4+c];
+    for(int i=0;i<16;i++) state[i]=in[i];
     add_rk(state, ctx->rk + ctx->nr*4);
     for(int rd=ctx->nr-1;rd>=0;rd--){
         inv_shift_rows(state);
@@ -170,5 +157,5 @@ void aes_decrypt_block(const AES_CTX *ctx, const u8 in[16], u8 out[16]) {
         add_rk(state, ctx->rk + rd*4);
         if(rd>0) inv_mix_columns(state);
     }
-    for(int r=0;r<4;r++) for(int c=0;c<4;c++) out[r*4+c]=state[c*4+r];
+    for(int i=0;i<16;i++) out[i]=state[i];
 }
