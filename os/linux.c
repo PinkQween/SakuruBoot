@@ -91,7 +91,7 @@ static __attribute__((unused)) u32 str_len(const char *s) {
     u32 n = 0; while (s[n]) n++; return n;
 }
 
-static u64 linux_load(const BootEntry *entry, BootInfo *info, void *fs_ctx) {
+static u64 linux_load(const BootEntry *entry, BootInfo *info __attribute__((unused)), void *fs_ctx) {
 #ifdef SAKURU_UEFI
     /*
      * UEFI path — use the kernel's built-in EFI stub.

@@ -19,6 +19,7 @@ set(UEFI_X86_SOURCES
     ${CMAKE_SOURCE_DIR}/uefi/uefi_loader.c
     ${CMAKE_SOURCE_DIR}/uefi/ext4.c
     ${CMAKE_SOURCE_DIR}/common/config.c
+    ${CMAKE_SOURCE_DIR}/common/mem.c
     ${CMAKE_SOURCE_DIR}/common/menu.c
     ${CMAKE_SOURCE_DIR}/common/efivar.c
     ${CMAKE_SOURCE_DIR}/common/bootcount.c
