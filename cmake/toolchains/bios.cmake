@@ -10,7 +10,7 @@ find_program(GCC_NATIVE gcc REQUIRED)
 set(CMAKE_C_COMPILER   "${GCC_NATIVE}")
 set(CMAKE_ASM_COMPILER "${GCC_NATIVE}")
 
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -no-pie")
 
 set(CMAKE_C_FLAGS_INIT
     "-std=c11 -m64 -ffreestanding -fno-stack-protector -fno-pic \

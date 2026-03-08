@@ -42,7 +42,8 @@ target_include_directories(stage2 PRIVATE ${CMAKE_SOURCE_DIR})
 
 target_link_options(stage2 PRIVATE
     -T${CMAKE_SOURCE_DIR}/bios/stage2/linker.ld
-    -nostdlib)
+    -nostdlib
+    -no-pie)
 
 # Convert stage2 ELF → flat binary
 find_program(OBJCOPY_NATIVE objcopy REQUIRED)
