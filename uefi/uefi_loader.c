@@ -29,7 +29,7 @@ static EFI_HANDLE g_boot_sfs_handle = NULL;
 /* ------------------------------------------------------------------ */
 /* Memory helpers used by crypto/argon2 and luks/luks_vol             */
 /* ------------------------------------------------------------------ */
-typedef EFI_STATUS (EFIAPI *AllocPoolFn)(UINTN, UINTN, void **);
+typedef EFI_STATUS (EFIAPI *AllocPoolFn)(EFI_MEMORY_TYPE, UINTN, void **);
 typedef EFI_STATUS (EFIAPI *FreePoolFn)(void *);
 #define bs_alloc_pool ((AllocPoolFn)(gBS->AllocatePool))
 #define bs_free_pool  ((FreePoolFn) (gBS->FreePool))
@@ -268,8 +268,8 @@ static void scan_dir_uefi(EFI_FILE_PROTOCOL *root, BootConfig *cfg,
 
 /* ------------------------------------------------------------------ */
 /* systemd-boot loader-entry parser                                    */
-/* Reads /loader/entries/*.conf and adds entries to BootConfig.        */
-/* Each .conf has: title, linux /path, initrd /path (×N), options ...  */
+/* Reads /loader/entries/ENTRY.conf and adds entries to BootConfig.   */
+/* Each .conf has: title, linux /path, initrd /path (xN), options ... */
 /* ------------------------------------------------------------------ */
 static int sl_eq(const char *a, const char *b) { /* simple strcmp */
     while (*a && *b && *a == *b) { a++; b++; }
@@ -1401,7 +1401,7 @@ static void connect_all_controllers(void) {
 /* UEFI ConOut (boot menu) only renders on the GOP framebuffer and     */
 /* the serial port carries only explicit OS UART output.               */
 /* ------------------------------------------------------------------ */
-static void detach_serial_console(void) {
+static __attribute__((unused)) void detach_serial_console(void) {
     static const EFI_GUID serial_guid = EFI_SERIAL_IO_PROTOCOL_GUID;
     UINTN n = 0; EFI_HANDLE *h = NULL;
     if (EFI_ERROR(gBS->LocateHandleBuffer(2 /* ByProtocol */,
@@ -1560,10 +1560,9 @@ EFI_STATUS uefi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *st) {
     if (bootcount_should_fallback(config.default_entry) &&
         config.num_entries > 1) {
         /* Fall back to entry 0 (the original default) */
-        u32 bad = config.default_entry;
-        config.default_entry = 0;
         dbg("[SakuruBoot] bootcount fallback: entry ");
-        dbghex(bad);
+        dbghex(config.default_entry);
+        config.default_entry = 0;
     }
 
     int sel = menu_run(&config, &menu_ops);
@@ -1654,11 +1653,6 @@ EFI_STATUS uefi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *st) {
                         }
 
                         /* Build a LUKS read callback over EFI BlockIO */
-                        typedef struct { EFI_BLOCK_IO bio; } BlkCtx;
-                        /* Use a simple inline lambda via static */
-                        static EFI_BLOCK_IO s_bio;
-                        s_bio = bio;
-
                         /* Try to open the LUKS volume */
                         /* We read directly via BlockIO using luks_open */
                         /* The LuksReadFn adapter is defined inline below */
