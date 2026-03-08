@@ -4,21 +4,15 @@
  * Exercises: config_parse(), config_parse_type(), config_parse_color(),
  *            config_guess_type(), config_make_name(), global keys,
  *            entry keys, boolean fields, edge cases.
+ *
+ * Compiled with -DSAKURU_HOST_TEST (via CMake). config.c compiled
+ * as a separate translation unit in the same test executable.
  */
-#define SAKURU_HOST_TEST
 #include "../framework/sakuru_test.h"
-
-/* Stub out freestanding bits that config.c doesn't actually need on host */
-#include <stdint.h>
-#include <stdbool.h>
-typedef uint8_t  u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef uintptr_t usize;
-
 #include "../../common/config.h"
-#include "../../common/config.c"   /* single-TU include for simplicity */
+
+#include <stdio.h>   /* snprintf */
+#include <string.h>  /* strlen   */
 
 /* ── Global keys ─────────────────────────────────────────────────────── */
 TEST(Config, GlobalTimeout) {
@@ -50,12 +44,10 @@ TEST(Config, DefaultClamped) {
 }
 
 TEST(Config, ThemeAndAccentColors) {
-    static const char cfg[] = "theme = blue\naccent = yellow\n";
-    BootConfig bc; bc.num_entries = 1; /* prevent -1 return */
-    /* hack: add a dummy entry so parse doesn't return -1 */
     static const char full[] =
         "theme = blue\naccent = yellow\n"
         "[entry:X]\ntype=linux\nkernel=/vmlinuz\n";
+    BootConfig bc; bc.num_entries = 0;
     config_parse(full, (u32)strlen(full), &bc);
     EXPECT_EQ(bc.theme_color, 1u);   /* blue = 1 */
     EXPECT_EQ(bc.accent_color, 14u); /* yellow = 14 */
