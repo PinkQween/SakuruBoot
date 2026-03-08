@@ -129,7 +129,7 @@ jobs:
       - name: Install QEMU and OVMF
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y qemu-system-x86 ovmf
+          sudo apt-get install -y qemu-system-x86 ovmf mtools
 
       - name: Download EFI image
         uses: actions/download-artifact@v4

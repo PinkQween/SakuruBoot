@@ -38,6 +38,13 @@ set_target_properties(BOOTX64 PROPERTIES
 
 target_include_directories(BOOTX64 PRIVATE ${CMAKE_SOURCE_DIR})
 
+# Copy final EFI to the binary-dir root so CI can find it at build/uefi-x86_64/BOOTX64.EFI
+add_custom_command(TARGET BOOTX64 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:BOOTX64>
+        ${CMAKE_BINARY_DIR}/BOOTX64.EFI
+    COMMENT "Copying BOOTX64.EFI to build root")
+
 # ── Optional Secure Boot signing ────────────────────────────────────────
 include(${CMAKE_SOURCE_DIR}/cmake/SignEFI.cmake OPTIONAL)
 
