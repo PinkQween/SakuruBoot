@@ -2,6 +2,9 @@
 set(CMAKE_SYSTEM_NAME       Generic)
 set(CMAKE_SYSTEM_PROCESSOR  aarch64)
 
+# Skip the link phase of CMake's compiler detection (no libc/entry point)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
 find_program(GCC_CROSS aarch64-elf-gcc REQUIRED
     DOC "AArch64 bare-metal GCC for UEFI AArch64 cross-compilation")
 find_program(OBJCOPY_CROSS aarch64-elf-objcopy REQUIRED

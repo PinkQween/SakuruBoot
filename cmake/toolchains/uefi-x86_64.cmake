@@ -2,6 +2,9 @@
 set(CMAKE_SYSTEM_NAME       Generic)
 set(CMAKE_SYSTEM_PROCESSOR  x86_64)
 
+# Skip the link phase of CMake's compiler detection (no libc/entry point)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
 # Prefer x86_64-w64-mingw32 from $PATH
 find_program(GCC_CROSS x86_64-w64-mingw32-gcc REQUIRED
     DOC "MinGW-w64 GCC for UEFI x86_64 cross-compilation")

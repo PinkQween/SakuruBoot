@@ -2,6 +2,9 @@
 set(CMAKE_SYSTEM_NAME       Generic)
 set(CMAKE_SYSTEM_PROCESSOR  x86_64)
 
+# Skip the link phase of CMake's compiler detection (freestanding, no libc)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
 # Use native gcc; -m32 for stage1 asm, -m64 for stage2 C
 find_program(GCC_NATIVE gcc REQUIRED)
 set(CMAKE_C_COMPILER   "${GCC_NATIVE}")
