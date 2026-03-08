@@ -10,20 +10,6 @@ It supports both UEFI and legacy BIOS firmware, loads the Linux kernel directly,
 - **First-class encryption** — LUKS passphrase entry happens in the bootloader itself; the OS never sees the raw block device.
 - **Dual architecture** — x86_64 PE32+ for modern UEFI and AArch64 flat ELF for embedded / Raspberry Pi targets.
 
-## Project layout
-
-```
-SakuruBoot/
-├── common/        # Config parser, passphrase UI, shared types
-├── crypto/        # SHA, HMAC, PBKDF2, Blake2b, Argon2, AES, XTS/CBC
-├── luks/          # LUKS1 + LUKS2 header parsing and key derivation
-├── uefi/          # UEFI entry point, ext4 reader, LUKS integration
-├── bios/          # MBR stage-1, stage-2 loader (BIOS only)
-├── Makefile
-├── sakuru.cfg.example
-└── docs/          # This website
-```
-
 ## Quick start
 
 1. Clone the repo and install the cross-compiler toolchain (see [Building](#building)).
