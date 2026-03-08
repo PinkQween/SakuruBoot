@@ -263,13 +263,28 @@ static u64 windows_load(const BootEntry *entry, BootInfo *info, void *fs_ctx) {
 }
 
 static void windows_boot(u64 ep, BootInfo *info) {
-    (void)info;
+    (void)ep; (void)info;
     /*
      * Jump to VBR at 0x7C00.
      * Per BIOS convention: DL = boot drive number (stored by stage1 in a
      * known location; we retrieve it via disk_get_drive()).
+     *
+     * In 32-bit mode: ljmp $0, $0x7C00 does a direct far jump.
+     * In 64-bit mode: ljmp is unsupported by GAS; use the lretq trick —
+     *   push CS=0 then RIP=0x7C00, then lretq pops RIP first then CS.
      */
-#if defined(__x86_64__) || defined(__i386__)
+#if defined(__x86_64__)
+    u8 drive = disk_drive();
+    __asm__ volatile (
+        "movb %0, %%dl\n\t"
+        "pushq $0x0\n\t"          /* CS  */
+        "pushq %1\n\t"            /* RIP */
+        "lretq\n\t"
+        :: "r"(drive), "i"((long)VBR_LOAD_ADDR)
+        : "dl", "memory"
+    );
+    while (1) __asm__ volatile ("hlt");
+#elif defined(__i386__)
     u8 drive = disk_drive();
     __asm__ volatile (
         "movb %0, %%dl\n\t"
@@ -278,8 +293,6 @@ static void windows_boot(u64 ep, BootInfo *info) {
         : "dl", "memory"
     );
     while (1) __asm__ volatile ("hlt");
-#else
-    (void)ep;
 #endif
 }
 

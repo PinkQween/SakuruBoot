@@ -87,7 +87,7 @@ static void str_copy_n(char *dst, const char *src, u32 max) {
     dst[i] = 0;
 }
 
-static u32 str_len(const char *s) {
+static __attribute__((unused)) u32 str_len(const char *s) {
     u32 n = 0; while (s[n]) n++; return n;
 }
 

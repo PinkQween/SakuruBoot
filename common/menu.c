@@ -45,7 +45,7 @@ static void print_n(const MenuOps *ops, const char *s, int n) {
     }
 }
 
-static void print_int(const MenuOps *ops, int n) {
+static __attribute__((unused)) void print_int(const MenuOps *ops, int n) {
     char buf[16]; int i = 15; buf[i--] = 0;
     if (n == 0) { buf[i--] = '0'; }
     while (n > 0) { buf[i--] = '0' + (n % 10); n /= 10; }

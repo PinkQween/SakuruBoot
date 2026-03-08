@@ -139,7 +139,7 @@ static void read_cluster(u32 cluster, void *buf) {
     disk_read(lba, g_spc, buf);
 }
 
-static bool is_space(char c) { return c == ' '; }
+static __attribute__((unused)) bool is_space(char c) { return c == ' '; }
 
 /* Convert FAT 8.3 name to a null-terminated string (e.g. "SAKURUCFG" → no) */
 static void fat83_to_str(const u8 *name, const u8 *ext, char *out) {
